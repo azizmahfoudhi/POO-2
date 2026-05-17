@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Criteres Examen POO2 - IHEC</title>
+<style>
+  body { font-family: 'Segoe UI', Arial, sans-serif; max-width: 900px; margin: 40px auto; color: #1a1a2e; line-height: 1.7; font-size: 14px; }
+  h1 { font-size: 24px; color: #2980B9; border-bottom: 3px solid #2980B9; padding-bottom: 8px; margin-top: 40px; }
+  h2 { font-size: 18px; color: #2C3E50; border-left: 5px solid #27AE60; padding-left: 12px; margin-top: 35px; background: #f9f9f9; padding: 10px 12px; border-radius: 0 6px 6px 0; }
+  h3 { font-size: 15px; color: #1a5276; margin-top: 20px; }
+  code { background: #f0f0f0; border-radius: 4px; padding: 2px 6px; font-family: Consolas, monospace; color: #c0392b; font-size: 13px; }
+  pre { background: #1e2533; color: #a8d8a8; padding: 16px; border-radius: 8px; font-size: 12px; overflow-x: auto; }
+  pre code { background: none; color: #a8d8a8; }
+  blockquote { border-left: 4px solid #2980B9; background: #eaf4fc; padding: 10px 16px; margin: 12px 0; border-radius: 0 6px 6px 0; }
+  table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+  th { background: #2980B9; color: white; padding: 10px 14px; text-align: left; }
+  td { padding: 9px 14px; border: 1px solid #ddd; }
+  tr:nth-child(even) { background: #f2f7fc; }
+  li { margin: 5px 0; }
+  hr { border: none; border-top: 2px solid #eee; margin: 30px 0; }
+  strong { color: #1a5276; }
+  .print-tip { background: #27AE60; color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; }
+  @media print { .print-tip { display: none; } body { font-size: 12px; } h1 { font-size: 18px; } h2 { font-size: 15px; } }
+</style>
+</head>
+<body>
+<div class="print-tip">📄 Pour sauvegarder en PDF : appuyez sur Ctrl+P &rarr; choisir "Enregistrer en PDF" &rarr; Enregistrer</div>
+<h1>✅ Critères de l'Examen vs Notre Projet — POO2 IHEC</h1>
+
+<blockquote>Ce document répond <strong>point par point</strong> aux exigences de la professeure,</blockquote>
+<blockquote>avec la preuve concrète dans notre code pour chaque critère.</blockquote>
+
+<hr>
+
+<h2>📌 Critère 1 — Application développée en Java ✅</h2>
+
+<strong>Ce que la prof veut :</strong> Une application Java fonctionnelle.
+
+<strong>Ce qu'on a :</strong>
+<li>L'application entière est en <strong>Java 17</strong></li>
+<li>Interface graphique : <strong>Java Swing</strong> (fenêtres, boutons, tableaux)</li>
+<li>Backend : <strong>Spring Boot</strong> (Java)</li>
+<li>Point d'entrée : <code>ClubApplication.java</code></li>
+
+<strong>Réponse si elle demande :</strong> <em>"Toute l'application est en Java 17. L'interface graphique utilise Java Swing avec FlatLaf pour le design moderne, et le serveur backend est développé avec Spring Boot, également en Java."</em>
+
+<hr>
+
+<h2>📌 Critère 2 — Connexion à une base de données ✅</h2>
+
+<strong>Ce que la prof veut :</strong> Persistance des données dans une base.
+
+<strong>Ce qu'on a :</strong>
+<li>Base de données : <strong>PostgreSQL</strong> hébergée sur <strong>Supabase</strong> (cloud)</li>
+<li>Configuration dans <code>application.properties</code> :</li>
+  ```
+  spring.datasource.url=jdbc:postgresql://aws-0-eu-west-1.pooler.supabase.com:5432/postgres
+  spring.datasource.username=postgres.rvbcdnsclorkontygtza
+  spring.jpa.hibernate.ddl-auto=update
+  ```
+<li><strong>5 tables</strong> créées automatiquement par Hibernate : <code>membre</code>, <code>club</code>, <code>budget</code>, <code>activite</code>, <code>club_membres</code></li>
+<li>Connexion sécurisée via <strong>SSL</strong> (<code>sslmode=require</code>)</li>
+
+<strong>Réponse si elle demande :</strong> <em>"On utilise PostgreSQL hébergé sur Supabase (cloud). La connexion est configurée dans application.properties. Hibernate génère et met à jour les tables automatiquement au démarrage grâce à ddl-auto=update."</em>
+
+<hr>
+
+<h2>📌 Critère 3 — Couche backend avec Spring Boot ✅</h2>
+
+<strong>Ce que la prof veut :</strong> Un backend Spring Boot bien structuré.
+
+<strong>Ce qu'on a :</strong>
+<li><code>@SpringBootApplication</code> dans <code>ClubApplication.java</code></li>
+<li>4 contrôleurs REST : <code>ClubController</code>, <code>MembreController</code>, <code>EvenementController</code>, <code>BudgetController</code></li>
+<li>3 services : <code>ClubService</code>, <code>MembreService</code>, <code>EvenementService</code></li>
+<li>4 repositories : <code>ClubRepository</code>, <code>MembreRepository</code>, <code>ActiviteRepository</code>, <code>BudgetRepository</code></li>
+<li>Architecture en <strong>3 couches</strong> : Controller → Service → Repository</li>
+
+<strong>Réponse si elle demande :</strong> <em>"Le backend est structuré en 3 couches. Les Controllers exposent les endpoints REST HTTP. Les Services contiennent la logique métier. Les Repositories s'occupent de l'accès aux données via Spring Data JPA."</em>
+
+<hr>
+
+<h2>📌 Critère 4 — API CRUD (Création, Lecture, Mise à jour, Suppression) ✅</h2>
+
+<strong>Ce que la prof veut :</strong> Des opérations CRUD complètes.
+
+<strong>Ce qu'on a pour les Clubs :</strong>
+
+<table>
+<tr><th>Opération</th><th>HTTP</th><th>Endpoint</th><th>Classe</th></tr>
+</table>
+|---|---|---|---|
+<table>
+<tr><th>**C**réer</th><th>POST</th><th>`/api/clubs`</th><th>`ClubController.create()`</th></tr>
+<tr><th>**R**ead (lire)</th><th>GET</th><th>`/api/clubs` et `/api/clubs/{id}`</th><th>`ClubController.getAll()`</th></tr>
+<tr><th>**U**pdate</th><th>PUT</th><th>`/api/clubs/{id}`</th><th>`ClubController.update()`</th></tr>
+<tr><th>**D**elete</th><th>DELETE</th><th>`/api/clubs/{id}`</th><th>`ClubController.delete()`</th></tr>
+</table>
+
+<strong>Et pour les Événements :</strong>
+
+<table>
+<tr><th>Opération</th><th>HTTP</th><th>Endpoint</th></tr>
+</table>
+|---|---|---|
+<table>
+<tr><th>Créer</th><th>POST</th><th>`/api/clubs/{id}/evenements`</th></tr>
+<tr><th>Lire</th><th>GET</th><th>`/api/clubs/{id}/evenements`</th></tr>
+<tr><th>Mettre à jour</th><th>PUT</th><th>`/api/evenements/{id}`</th></tr>
+<tr><th>Supprimer</th><th>DELETE</th><th>`/api/evenements/{id}`</th></tr>
+</table>
+
+<strong>Réponse si elle demande :</strong> <em>"On a implémenté le CRUD complet pour les clubs, membres et événements. Par exemple, pour un club : POST pour créer, GET pour lire, PUT pour modifier, DELETE pour supprimer. Tout passe par des endpoints REST."</em>
+
+<hr>
+
+<h2>📌 Critère 5 — Besoin réel de la vie universitaire à l'IHEC ✅</h2>
+
+<strong>Ce que la prof veut :</strong> L'application doit résoudre un vrai problème universitaire.
+
+<strong>Ce qu'on a :</strong>
+<li><strong>Système de Gestion des Clubs Universitaires de l'IHEC Carthage</strong></li>
+<li>Gère des clubs réels : Enactus (entrepreneuriat), Lions Club (service), Art Revolution (culture)</li>
+<li>3 rôles qui correspondent à la réalité : Admin (direction), Président (chef de club), Étudiant</li>
+<li>Fonctionnalités réelles : organisation d'événements, budget, propositions d'activités par les étudiants</li>
+
+<strong>Réponse si elle demande :</strong> <em>"Notre application répond au besoin réel de gérer les clubs de l'IHEC. Les étudiants peuvent s'inscrire dans des clubs, proposer des événements, et les présidents peuvent les valider ou refuser. Tout est sauvegardé en base de données cloud."</em>
+
+<hr>
+
+<h2>📌 Critère 6 — Encapsulation ✅</h2>
+
+<strong>Ce que la prof veut :</strong> Attributs privés, accès via getters/setters.
+
+<strong>Ce qu'on a :</strong>
+
+<pre><code>
+// Budget.java — exemple parfait d'encapsulation
+public class Budget {
+    private double solde;          // ← attribut PRIVÉ
+
+    public double getSolde() { return solde; }          // getter
+    public void setSolde(double solde) { this.solde = solde; }  // setter
+
+    // Méthodes métier encapsulant la logique
+    public void ajouterDepense(double montant) { solde -= montant; }
+    public void ajouterRevenu(double montant) { solde += montant; }
+    public boolean aSuffisammentDeFonds(double montant) { return solde &gt;= montant; }
+}
+</code></pre>
+
+<strong>Autre exemple :</strong> <code>Membre.java</code> — le champ <code>password</code> est <code>private</code> avec <code>@JsonIgnore</code> pour empêcher sa sérialisation JSON.
+
+<strong>Réponse si elle demande :</strong> <em>"Tous les attributs de nos classes sont privés. L'accès se fait uniquement via des getters et setters. Par exemple dans Budget, le solde est privé et on passe par des méthodes comme ajouterDepense() et ajouterRevenu() pour le modifier."</em>
+
+<hr>
+
+<h2>📌 Critère 7 — Héritage ✅</h2>
+
+<strong>Ce que la prof veut :</strong> Utilisation de l'héritage entre classes.
+
+<strong>Ce qu'on a :</strong>
+
+<h3>Hiérarchie des Membres</h3>
+<pre><code>
+Membre (classe mère)
+├── Admin        (hérite de Membre)
+├── President    (hérite de Membre)
+└── Etudiant     (hérite de Membre)
+</code></pre>
+
+<h3>Hiérarchie des Événements</h3>
+<pre><code>
+Activite (classe abstraite)
+├── EvenementAcademique  (hérite de Activite)
+├── EvenementSportif     (hérite de Activite)
+├── EvenementCulturel    (hérite de Activite)
+└── EvenementProposition (hérite de Activite)
+</code></pre>
+
+<strong>Stockage JPA :</strong> <code>@Inheritance(strategy = InheritanceType.SINGLE_TABLE)</code> — une seule table avec un discriminateur.
+
+<strong>Réponse si elle demande :</strong> <em>"On a deux hiérarchies d'héritage. La première : Membre est la classe mère, Admin, President et Etudiant en héritent. La deuxième : Activite est une classe abstraite dont héritent EvenementAcademique, EvenementSportif et EvenementCulturel."</em>
+
+<hr>
+
+<h2>📌 Critère 8 — Polymorphisme ✅</h2>
+
+<strong>Ce que la prof veut :</strong> Des méthodes redéfinies différemment selon les sous-classes.
+
+<strong>Ce qu'on a :</strong>
+
+<pre><code>
+// Activite.java — méthode ABSTRAITE (polymorphisme)
+public abstract double getCoutTotal();
+
+// EvenementAcademique → coût global fixe
+@Override
+public double getCoutTotal() { return coutGlobal; }
+
+// EvenementSportif → équipement + logistique
+@Override
+public double getCoutTotal() { return coutEquipement + coutLogistique; }
+
+// EvenementCulturel → décoration + sonorisation
+@Override
+public double getCoutTotal() { return coutDecoration + coutSonorisation; }
+</code></pre>
+
+<strong>Utilisation dans le service :</strong>
+<pre><code>
+// EvenementService.java — appel polymorphique
+club.getBudget().ajouterDepense(evenement.getCoutTotal());
+// Sans savoir si c'est académique, sportif ou culturel !
+</code></pre>
+
+<strong>Réponse si elle demande :</strong> <em>"La méthode getCoutTotal() est abstraite dans Activite. Chaque sous-classe la redéfinit différemment : pour un événement académique c'est le coût global, pour un sportif c'est équipement + logistique, pour un culturel c'est décoration + sonorisation. Dans le service, on appelle getCoutTotal() sans connaître le type exact — c'est le polymorphisme."</em>
+
+<hr>
+
+<h2>📌 Critère 9 — Architecture POO bien structurée ✅</h2>
+
+<strong>Ce que la prof veut :</strong> Code organisé selon les principes POO.
+
+<strong>Ce qu'on a :</strong>
+<li><strong>Séparation des responsabilités</strong> : chaque classe a un rôle unique</li>
+<li><strong>Pattern MVC enrichi</strong> : Model / Controller / Service / Repository / View (Swing)</li>
+<li><strong>Classe abstraite</strong> <code>Activite</code> — impossible d'instancier directement</li>
+<li><strong>Constructeurs protégés</strong> sur les classes mères</li>
+<li><strong>Méthodes métier</strong> dans chaque entité (ex: <code>Club.ajouterMembre()</code>, <code>Budget.ajouterDepense()</code>)</li>
+<li><strong>Relations JPA</strong> correctement modélisées : <code>@OneToOne</code>, <code>@OneToMany</code>, <code>@ManyToMany</code></li>
+
+<hr>
+
+<h2>📌 Critère 10 — Code clair, organisé et documenté ✅</h2>
+
+<strong>Ce que la prof veut :</strong> Code lisible avec commentaires.
+
+<strong>Ce qu'on a :</strong>
+<li>Chaque classe a un <strong>commentaire Javadoc</strong> expliquant son rôle et les principes POO démontrés :</li>
+  ```java
+  /**
+   * Classe de base pour tous les membres du système.
+   * Utilise l'héritage SINGLE_TABLE.
+   * Démontre : Encapsulation, Héritage, Polymorphisme
+   */
+  ```
+<li>Chaque méthode a un commentaire descriptif</li>
+<li>Organisation en <strong>packages</strong> logiques : <code>model</code>, <code>repository</code>, <code>service</code>, <code>controller</code>, <code>gui</code></li>
+<li>Nommage en <strong>français</strong> cohérent avec le domaine (nom, prenom, solde, etc.)</li>
+<li><code>run.bat</code> pour lancer facilement</li>
+<li><code>schema.sql</code> comme documentation du schéma de la base</li>
+
+<hr>
+
+<h2>🎯 Résumé — Tableau de Conformité</h2>
+
+<table>
+<tr><th>Critère Prof</th><th>Implémenté ?</th><th>Preuve</th></tr>
+</table>
+|---|---|---|
+<table>
+<tr><th>Application Java</th><th>✅</th><th>Java 17, Swing + Spring Boot</th></tr>
+<tr><th>Connexion BDD</th><th>✅</th><th>PostgreSQL Supabase (5 tables)</th></tr>
+<tr><th>Backend Spring Boot</th><th>✅</th><th>4 Controllers, 3 Services, 4 Repos</th></tr>
+<tr><th>CRUD complet</th><th>✅</th><th>GET/POST/PUT/DELETE pour clubs, membres, événements</th></tr>
+<tr><th>Besoin universitaire réel</th><th>✅</th><th>Gestion clubs IHEC (Enactus, Lions, Art)</th></tr>
+<tr><th>Encapsulation</th><th>✅</th><th>Tous champs `private`, getters/setters, méthodes métier</th></tr>
+<tr><th>Héritage</th><th>✅</th><th>Membre→Admin/President/Etudiant, Activite→3 types</th></tr>
+<tr><th>Polymorphisme</th><th>✅</th><th>`getCoutTotal()` abstraite + 3 implémentations</th></tr>
+<tr><th>Architecture structurée</th><th>✅</th><th>5 packages, pattern MVC, classes abstraites</th></tr>
+<tr><th>Code documenté</th><th>✅</th><th>Javadoc sur toutes les classes et méthodes</th></tr>
+</table>
+
+<hr>
+
+<h2>💬 Phrases-clés à retenir pour la soutenance</h2>
+
+1. <strong>"Notre application répond au besoin réel de gérer les clubs universitaires de l'IHEC."</strong>
+2. <strong>"On a implémenté l'encapsulation en rendant tous les attributs privés et en passant par des méthodes métier."</strong>
+3. <strong>"L'héritage est illustré par deux hiérarchies : les membres (Admin, Président, Étudiant) et les événements (Académique, Sportif, Culturel)."</strong>
+4. <strong>"Le polymorphisme se voit dans getCoutTotal() : la même méthode retourne un résultat différent selon le type d'événement."</strong>
+5. <strong>"Spring Boot expose une API REST complète avec les 4 opérations CRUD pour chaque entité."</strong>
+6. <strong>"Les données sont persistées dans PostgreSQL sur Supabase — une base de données cloud professionnelle."</strong>
+7. <strong>"L'architecture est en 4 couches : Controller (API), Service (logique), Repository (BDD), Model (entités)."</strong>
+
+</body>
+</html>

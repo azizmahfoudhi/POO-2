@@ -5,6 +5,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
+import javax.swing.table.TableRowSorter;
 
 /**
  * Panneau d'administration — accès complet à tous les clubs.
@@ -20,6 +21,11 @@ public class AdminPanel extends JPanel {
     private DefaultTableModel evenementsModel;
     private int clubSelectionneIndex = -1;
 
+    // Dashboard labels
+    private JLabel statClubsLabel = new JLabel("0");
+    private JLabel statMembresLabel = new JLabel("0");
+    private JLabel statBudgetLabel = new JLabel("0 DT");
+
     public AdminPanel(Map<String, Object> admin, MainGUI mainGUI) {
         this.admin = admin;
         this.mainGUI = mainGUI;
@@ -27,34 +33,67 @@ public class AdminPanel extends JPanel {
 
         // En-tête
         JPanel headerPanel = new JPanel(new BorderLayout());
-        JLabel titre = new JLabel("MENU ADMIN : " + admin.get("nom"));
-        titre.setFont(new Font("Arial", Font.BOLD, 18));
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+        headerPanel.setBackground(new Color(44, 62, 80));
+        JLabel titre = new JLabel("⚙️  ADMIN : " + admin.get("nom") + " " + admin.get("prenom"));
+        titre.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        titre.setForeground(Color.WHITE);
         headerPanel.add(titre, BorderLayout.WEST);
 
         JButton deconnecterBtn = new JButton("Se déconnecter");
+        deconnecterBtn.setFocusPainted(false);
         deconnecterBtn.addActionListener(e -> mainGUI.deconnecter());
         headerPanel.add(deconnecterBtn, BorderLayout.EAST);
         add(headerPanel, BorderLayout.NORTH);
 
         JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         tabbedPane.addTab("Gestion des Clubs", creerPanneauGestionClubs());
         tabbedPane.addTab("Gérer un Club", creerPanneauGererClub());
         add(tabbedPane, BorderLayout.CENTER);
     }
 
     private JPanel creerPanneauGestionClubs() {
-        JPanel panel = new JPanel(new BorderLayout());
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        // --- Dashboard Stats ---
+        JPanel statsPanel = new JPanel(new GridLayout(1, 3, 10, 10));
+        statsPanel.add(creerCarteStatistique("Total Clubs", statClubsLabel));
+        statsPanel.add(creerCarteStatistique("Total Membres", statMembresLabel));
+        statsPanel.add(creerCarteStatistique("Budget Global", statBudgetLabel));
+
+        // --- Tableau ---
         String[] colonnes = {"Nom", "Type", "Membres", "Budget"};
         DefaultTableModel model = new DefaultTableModel(colonnes, 0) {
             public boolean isCellEditable(int r, int c) { return false; }
         };
         JTable table = new JTable(model);
+        table.setRowHeight(25);
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
+        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
+        table.setRowSorter(sorter);
         JScrollPane scrollPane = new JScrollPane(table);
 
-        JPanel buttonPanel = new JPanel(new FlowLayout());
+        // --- Search and Actions ---
+        JPanel topActionPanel = new JPanel(new BorderLayout());
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        searchPanel.add(new JLabel("Rechercher : "));
+        JTextField searchField = new JTextField(20);
+        searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { search(searchField.getText(), sorter); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { search(searchField.getText(), sorter); }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { search(searchField.getText(), sorter); }
+        });
+        searchPanel.add(searchField);
+        topActionPanel.add(statsPanel, BorderLayout.NORTH);
+        topActionPanel.add(searchPanel, BorderLayout.SOUTH);
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton ajouterBtn = new JButton("Ajouter un club");
         JButton actualiserBtn = new JButton("Actualiser");
         JButton supprimerBtn = new JButton("Supprimer le club");
+        JButton exportBtn = new JButton("Exporter CSV");
 
         ajouterBtn.addActionListener(e -> ouvrirDialogAjouterClub(model));
         actualiserBtn.addActionListener(e -> actualiserTableClubs(model));
@@ -64,8 +103,9 @@ public class AdminPanel extends JPanel {
                 JOptionPane.showMessageDialog(this, "Sélectionnez un club");
                 return;
             }
+            int modelRow = table.convertRowIndexToModel(row);
             try {
-                Map<String, Object> club = clubsData.get(row);
+                Map<String, Object> club = clubsData.get(modelRow);
                 int confirm = JOptionPane.showConfirmDialog(this, "Supprimer le club " + club.get("nom") + " ?");
                 if (confirm == JOptionPane.YES_OPTION) {
                     ApiClient.delete("/clubs/" + club.get("id"));
@@ -75,14 +115,43 @@ public class AdminPanel extends JPanel {
                 JOptionPane.showMessageDialog(this, "Erreur: " + ex.getMessage());
             }
         });
+        exportBtn.addActionListener(e -> ExportUtils.exportTableToCSV(table, this));
 
         buttonPanel.add(ajouterBtn);
         buttonPanel.add(supprimerBtn);
+        buttonPanel.add(exportBtn);
         buttonPanel.add(actualiserBtn);
+
+        panel.add(topActionPanel, BorderLayout.NORTH);
         panel.add(scrollPane, BorderLayout.CENTER);
         panel.add(buttonPanel, BorderLayout.SOUTH);
         actualiserTableClubs(model);
         return panel;
+    }
+
+    private JPanel creerCarteStatistique(String titre, JLabel valeurLabel) {
+        JPanel carte = new JPanel(new BorderLayout());
+        carte.setBackground(new Color(245, 245, 250));
+        carte.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(220, 220, 220), 1, true),
+            BorderFactory.createEmptyBorder(15, 15, 15, 15)
+        ));
+        JLabel tLabel = new JLabel(titre);
+        tLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        tLabel.setForeground(Color.GRAY);
+        valeurLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        valeurLabel.setForeground(new Color(41, 128, 185));
+        carte.add(tLabel, BorderLayout.NORTH);
+        carte.add(valeurLabel, BorderLayout.CENTER);
+        return carte;
+    }
+
+    private void search(String str, TableRowSorter<DefaultTableModel> sorter) {
+        if (str.trim().length() == 0) {
+            sorter.setRowFilter(null);
+        } else {
+            sorter.setRowFilter(RowFilter.regexFilter("(?i)" + str));
+        }
     }
 
     private void actualiserTableClubs(DefaultTableModel model) {
@@ -90,15 +159,31 @@ public class AdminPanel extends JPanel {
             model.setRowCount(0);
             String json = ApiClient.get("/clubs");
             clubsData = ApiClient.parseList(json);
+            
+            int totalClubs = clubsData.size();
+            int totalMembres = 0;
+            double totalBudget = 0.0;
+
             for (Map<String, Object> c : clubsData) {
                 List<?> membres = (List<?>) c.get("membres");
                 Map<?, ?> budget = (Map<?, ?>) c.get("budget");
+                
+                int nbMembres = membres != null ? membres.size() : 0;
+                double budgetVal = budget != null ? ((Number) budget.get("solde")).doubleValue() : 0.0;
+                
+                totalMembres += nbMembres;
+                totalBudget += budgetVal;
+
                 model.addRow(new Object[]{
-                    c.get("nom"), c.get("type"),
-                    membres != null ? membres.size() : 0,
-                    budget != null ? String.format("%.2f DT", ((Number) budget.get("solde")).doubleValue()) : "N/A"
+                    c.get("nom"), c.get("type"), nbMembres,
+                    budget != null ? String.format("%.2f DT", budgetVal) : "N/A"
                 });
             }
+            
+            statClubsLabel.setText(String.valueOf(totalClubs));
+            statMembresLabel.setText(String.valueOf(totalMembres));
+            statBudgetLabel.setText(String.format("%.2f DT", totalBudget));
+            
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Erreur: " + ex.getMessage());
         }
@@ -128,19 +213,35 @@ public class AdminPanel extends JPanel {
             public boolean isCellEditable(int r, int c) { return false; }
         };
         JTable membresTable = new JTable(membresModel);
-        JPanel membresBtnPanel = new JPanel(new FlowLayout());
+        membresTable.setRowHeight(25);
+        TableRowSorter<DefaultTableModel> membresSorter = new TableRowSorter<>(membresModel);
+        membresTable.setRowSorter(membresSorter);
+
+        JPanel mSearchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        mSearchPanel.add(new JLabel("Rechercher membre : "));
+        JTextField mSearchField = new JTextField(20);
+        mSearchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { search(mSearchField.getText(), membresSorter); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { search(mSearchField.getText(), membresSorter); }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { search(mSearchField.getText(), membresSorter); }
+        });
+        mSearchPanel.add(mSearchField);
+
+        JPanel membresBtnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton ajouterMembreBtn = new JButton("Ajouter un membre");
         JButton supprimerMembreBtn = new JButton("Supprimer");
+        JButton exportMembresBtn = new JButton("Exporter CSV");
         JButton actualiserMembresBtn = new JButton("Actualiser");
 
         ajouterMembreBtn.addActionListener(e -> ouvrirDialogAjouterMembre());
         supprimerMembreBtn.addActionListener(e -> {
             int row = membresTable.getSelectedRow();
             if (row == -1 || clubSelectionneIndex < 0) return;
+            int modelRow = membresTable.convertRowIndexToModel(row);
             try {
                 Map<String, Object> club = clubsData.get(clubSelectionneIndex);
                 List<?> membres = (List<?>) club.get("membres");
-                Map<?, ?> m = (Map<?, ?>) membres.get(row);
+                Map<?, ?> m = (Map<?, ?>) membres.get(modelRow);
                 ApiClient.delete("/clubs/" + club.get("id") + "/membres/" + m.get("id"));
                 actualiserComboBox();
                 actualiserMembres();
@@ -148,11 +249,15 @@ public class AdminPanel extends JPanel {
                 JOptionPane.showMessageDialog(this, "Erreur: " + ex.getMessage());
             }
         });
+        exportMembresBtn.addActionListener(e -> ExportUtils.exportTableToCSV(membresTable, this));
         actualiserMembresBtn.addActionListener(e -> { actualiserComboBox(); actualiserMembres(); });
 
         membresBtnPanel.add(ajouterMembreBtn);
         membresBtnPanel.add(supprimerMembreBtn);
+        membresBtnPanel.add(exportMembresBtn);
         membresBtnPanel.add(actualiserMembresBtn);
+        
+        membresPanel.add(mSearchPanel, BorderLayout.NORTH);
         membresPanel.add(new JScrollPane(membresTable), BorderLayout.CENTER);
         membresPanel.add(membresBtnPanel, BorderLayout.SOUTH);
         innerTabs.addTab("Membres", membresPanel);
@@ -164,18 +269,37 @@ public class AdminPanel extends JPanel {
             public boolean isCellEditable(int r, int c) { return false; }
         };
         JTable evtsTable = new JTable(evenementsModel);
-        JPanel evtsBtnPanel = new JPanel(new FlowLayout());
+        evtsTable.setRowHeight(25);
+        TableRowSorter<DefaultTableModel> evtsSorter = new TableRowSorter<>(evenementsModel);
+        evtsTable.setRowSorter(evtsSorter);
+
+        JPanel eSearchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        eSearchPanel.add(new JLabel("Rechercher événement : "));
+        JTextField eSearchField = new JTextField(20);
+        eSearchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { search(eSearchField.getText(), evtsSorter); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { search(eSearchField.getText(), evtsSorter); }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { search(eSearchField.getText(), evtsSorter); }
+        });
+        eSearchPanel.add(eSearchField);
+
+        JPanel evtsBtnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton ajouterEvtBtn = new JButton("Ajouter un événement");
         JButton gererPropsBtn = new JButton("Gérer propositions");
+        JButton exportEvtsBtn = new JButton("Exporter CSV");
         JButton actualiserEvtsBtn = new JButton("Actualiser");
 
         ajouterEvtBtn.addActionListener(e -> ouvrirDialogAjouterEvenement());
         gererPropsBtn.addActionListener(e -> gererPropositions());
+        exportEvtsBtn.addActionListener(e -> ExportUtils.exportTableToCSV(evtsTable, this));
         actualiserEvtsBtn.addActionListener(e -> actualiserEvenements());
 
         evtsBtnPanel.add(ajouterEvtBtn);
         evtsBtnPanel.add(gererPropsBtn);
+        evtsBtnPanel.add(exportEvtsBtn);
         evtsBtnPanel.add(actualiserEvtsBtn);
+        
+        evenementsPanel.add(eSearchPanel, BorderLayout.NORTH);
         evenementsPanel.add(new JScrollPane(evtsTable), BorderLayout.CENTER);
         evenementsPanel.add(evtsBtnPanel, BorderLayout.SOUTH);
         innerTabs.addTab("Événements", evenementsPanel);

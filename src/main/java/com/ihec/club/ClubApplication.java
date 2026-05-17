@@ -22,7 +22,11 @@ public class ClubApplication {
         // 2. Lancer l'interface graphique Swing
         SwingUtilities.invokeLater(() -> {
             try {
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                UIManager.setLookAndFeel(new com.formdev.flatlaf.FlatLightLaf());
+                // Optionnel: Personnaliser les couleurs par défaut
+                UIManager.put( "Button.arc", 10 );
+                UIManager.put( "Component.arc", 10 );
+                UIManager.put( "TextComponent.arc", 10 );
             } catch (Exception e) {
                 e.printStackTrace();
             }

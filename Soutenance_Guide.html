@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Guide de Soutenance - Gestion des Clubs IHEC</title>
+<style>
+  body { font-family: 'Segoe UI', Arial, sans-serif; max-width: 920px; margin: 40px auto; color: #1a1a2e; line-height: 1.75; font-size: 14px; padding: 0 20px; }
+  h1 { font-size: 26px; color: #2980B9; border-bottom: 3px solid #2980B9; padding-bottom: 10px; margin-top: 40px; }
+  h2 { font-size: 19px; color: #2C3E50; border-left: 5px solid #2980B9; padding: 10px 14px; margin-top: 35px; background: #f8f9fa; border-radius: 0 6px 6px 0; }
+  h3 { font-size: 15px; color: #1a5276; margin-top: 22px; border-bottom: 1px dashed #ccc; padding-bottom: 4px; }
+  code { background: #f0f0f0; border-radius: 4px; padding: 2px 7px; font-family: Consolas, monospace; color: #c0392b; font-size: 13px; }
+  pre { background: #1e2533; color: #a8d8a8; padding: 18px; border-radius: 8px; font-size: 12px; overflow-x: auto; margin: 12px 0; }
+  pre code { background: none; color: #a8d8a8; padding: 0; }
+  blockquote { border-left: 4px solid #27AE60; background: #eafaf1; padding: 10px 16px; margin: 14px 0; border-radius: 0 6px 6px 0; color: #1e8449; font-style: italic; }
+  table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+  th { background: #2C3E50; color: white; padding: 10px 14px; text-align: left; }
+  td { padding: 9px 14px; border: 1px solid #ddd; }
+  tr:nth-child(even) { background: #f2f7fc; }
+  ul, ol { padding-left: 22px; }
+  li { margin: 5px 0; }
+  hr { border: none; border-top: 2px solid #eee; margin: 32px 0; }
+  strong { color: #154360; }
+  .print-tip { background: #2980B9; color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 24px; font-weight: bold; text-align: center; font-size: 15px; }
+  .cover { text-align: center; padding: 40px; background: linear-gradient(135deg, #1a2a6c, #2980B9); color: white; border-radius: 12px; margin-bottom: 40px; }
+  .cover h1 { color: white; border-bottom: 2px solid rgba(255,255,255,0.4); }
+  .cover p { font-size: 15px; opacity: 0.9; }
+  @media print {
+    .print-tip { display: none; }
+    .cover { background: #2980B9 !important; -webkit-print-color-adjust: exact; }
+    body { font-size: 12px; margin: 10px; }
+    h1 { font-size: 20px; }
+    h2 { font-size: 16px; }
+    pre { font-size: 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="print-tip">📄 Appuyer Ctrl+P &rarr; "Enregistrer en PDF" pour sauvegarder</div>
+<div class="cover">
+  <h1>📋 Guide de Soutenance</h1>
+  <p>Système de Gestion des Clubs Universitaires</p>
+  <p><strong>IHEC Carthage</strong> &nbsp;|&nbsp; POO2 — Java · Spring Boot · PostgreSQL · Supabase</p>
+  <p style="font-size:13px;opacity:0.7">2025-2026</p>
+</div>
+<h1>📋 Guide de Soutenance — Système de Gestion des Clubs IHEC</h1>
+
+<hr>
+
+<h2>🌍 Description Non-Technique (Explication Simple)</h2>
+
+<h3>C'est quoi cette application ?</h3>
+
+C'est un <strong>logiciel de gestion des clubs universitaires</strong> de l'IHEC Carthage.  
+Il permet à 3 types d'utilisateurs de gérer les clubs, les membres et les événements :
+
+<table>
+<tr><th>Qui ?</th><th>Quoi ?</th></tr>
+</table>
+|---|---|
+<table>
+<tr><th>**L'Administrateur**</th><th>Crée des clubs, gère tous les membres, supervise les budgets</th></tr>
+<tr><td>**Le Président**</td><td>Gère les événements de son club, accepte/refuse les propositions, surveille le budget</td></tr>
+<tr><td>**L'Étudiant**</td><td>Consulte les événements et propose ses propres idées d'activités</td></tr>
+</table>
+
+<h3>Comment ça marche concrètement ?</h3>
+
+1. L'utilisateur <strong>lance l'application</strong> → une fenêtre de connexion apparaît
+2. Il entre son <strong>email et mot de passe</strong>
+3. Selon son <strong>rôle</strong>, il accède à un espace différent (Admin, Président, ou Étudiant)
+4. Toutes les données sont <strong>sauvegardées en ligne</strong> dans une base de données PostgreSQL hébergée sur <strong>Supabase</strong> (cloud)
+
+<hr>
+
+<h2>🏗️ Architecture Technique</h2>
+
+<h3>Vue d'ensemble</h3>
+
+<pre><code>
+┌────────────────────────────────────────────┐
+│          CLIENT (Interface Swing)           │
+│  MainGUI → AdminPanel / PresidentPanel /    │
+│            EtudiantPanel                   │
+│                  │                         │
+│            ApiClient.java                  │
+│         (HTTP REST Calls)                  │
+└──────────────────┬─────────────────────────┘
+                   │ HTTP / JSON
+                   ▼
+┌────────────────────────────────────────────┐
+│        SERVEUR (Spring Boot REST)          │
+│  Controllers → Services → Repositories     │
+│                  │                         │
+│         Spring Data JPA / Hibernate        │
+└──────────────────┬─────────────────────────┘
+                   │ JDBC / SSL
+                   ▼
+┌────────────────────────────────────────────┐
+│    BASE DE DONNÉES (PostgreSQL / Supabase) │
+│  Tables: membre, club, budget, activite,   │
+│          club_membres                      │
+└────────────────────────────────────────────┘
+</code></pre>
+
+<h3>Stack Technologique</h3>
+
+<table>
+<tr><th>Couche</th><th>Technologie</th></tr>
+</table>
+|---|---|
+<table>
+<tr><th>**Interface graphique**</th><th>Java Swing + FlatLaf</th></tr>
+<tr><td>**Backend / Serveur**</td><td>Spring Boot 3.2.5</td></tr>
+<tr><td>**ORM**</td><td>Spring Data JPA + Hibernate</td></tr>
+<tr><td>**Base de données**</td><td>PostgreSQL (Supabase Cloud)</td></tr>
+<tr><td>**Communication**</td><td>REST API (HTTP/JSON) via `java.net.http.HttpClient`</td></tr>
+<tr><td>**Sérialisation JSON**</td><td>Jackson (ObjectMapper)</td></tr>
+<tr><td>**Build**</td><td>Maven (mvnw)</td></tr>
+</table>
+
+<hr>
+
+<h2>🔷 Architecture en Couches (Layers)</h2>
+
+Le projet suit le pattern <strong>MVC enrichi</strong> avec 4 couches :
+
+<h3>1. <code>model/</code> — La couche Modèle (Entités JPA)</h3>
+<blockquote>Ce sont les <strong>objets métier</strong> qui représentent les données.</blockquote>
+
+<ul>
+<li><code>Membre</code> → classe mère abstraite (Admin, President, Etudiant)</li>
+<li><code>Club</code> → entité centrale</li>
+<li><code>Budget</code> → composition dans Club</li>
+<li><code>Activite</code> → classe abstraite pour les événements</li>
+<li><code>EvenementAcademique</code>, <code>EvenementSportif</code>, <code>EvenementCulturel</code> → sous-classes</li>
+<li><code>EvenementProposition</code> → proposition en attente de validation</li>
+</ul>
+
+<h3>2. <code>repository/</code> — La couche Accès aux Données</h3>
+<blockquote>Ce sont les <strong>interfaces</strong> qui parlent directement à PostgreSQL.</blockquote>
+
+<ul>
+<li><code>MembreRepository extends JpaRepository<Membre, Long></code> → CRUD automatique</li>
+<li><code>ClubRepository</code>, <code>ActiviteRepository</code>, <code>BudgetRepository</code></li>
+<li>Spring génère automatiquement toutes les requêtes SQL</li>
+</ul>
+
+<h3>3. <code>service/</code> — La couche Logique Métier</h3>
+<blockquote>Contient les <strong>règles de gestion</strong> de l'application.</blockquote>
+
+<ul>
+<li><code>ClubService</code> → créer club, ajouter/supprimer membres, etc.</li>
+<li><code>MembreService</code> → authentification, inscription</li>
+<li><code>EvenementService</code> → créer événement, accepter/refuser proposition, déduire du budget</li>
+</ul>
+
+<h3>4. <code>controller/</code> — La couche API REST</h3>
+<blockquote>Expose les <strong>endpoints HTTP</strong> utilisés par l'interface Swing.</blockquote>
+
+<ul>
+<li><code>ClubController</code> → <code>/api/clubs</code></li>
+<li><code>MembreController</code> → <code>/api/auth/login</code>, <code>/api/auth/register</code></li>
+<li><code>EvenementController</code> → <code>/api/clubs/{id}/evenements</code>, <code>/api/propositions</code></li>
+<li><code>BudgetController</code> → <code>/api/clubs/{id}/budget</code></li>
+</ul>
+
+<h3>5. <code>gui/</code> — L'Interface Swing</h3>
+<blockquote>La <strong>fenêtre graphique</strong> qui appelle l'API via <code>ApiClient.java</code>.</blockquote>
+
+<ul>
+<li><code>MainGUI</code> → fenêtre principale + écran de connexion</li>
+<li><code>AdminPanel</code>, <code>PresidentPanel</code>, <code>EtudiantPanel</code></li>
+<li><code>ApiClient</code> → envoie les requêtes HTTP et parse le JSON</li>
+<li><code>ExportUtils</code> → export CSV des tableaux</li>
+</ul>
+
+<hr>
+
+<h2>🧬 Concepts POO Appliqués</h2>
+
+<h3>1. 🔒 Encapsulation</h3>
+Tous les champs des classes sont <code>private</code>, accessibles uniquement via des <strong>getters/setters</strong>.
+
+<pre><code>
+// Budget.java
+private double solde;
+public double getSolde() { return solde; }
+public void ajouterDepense(double montant) { solde -= montant; }
+</code></pre>
+
+<h3>2. 🧱 Héritage (Inheritance)</h3>
+La hiérarchie des membres utilise <code>SINGLE_TABLE</code> avec un discriminateur :
+
+<pre><code>
+Membre (classe mère)
+├── Admin        → role = "admin"
+├── President    → role = "president"
+└── Etudiant     → role = "etudiant"
+</code></pre>
+
+La hiérarchie des événements :
+<pre><code>
+Activite (classe abstraite)
+├── EvenementAcademique  → type = "academique"
+├── EvenementSportif     → type = "sportif"
+├── EvenementCulturel    → type = "culturel"
+└── EvenementProposition → type = "proposition"
+</code></pre>
+
+<h3>3. 🎭 Polymorphisme</h3>
+La méthode <strong>abstraite</strong> <code>getCoutTotal()</code> est redéfinie différemment dans chaque sous-classe d'événement :
+
+<pre><code>
+// Activite.java (abstraite)
+public abstract double getCoutTotal();
+
+// EvenementAcademique → retourne coutGlobal
+// EvenementSportif    → retourne coutEquipement + coutLogistique
+// EvenementCulturel   → retourne coutDecoration + coutSonorisation
+</code></pre>
+
+Grâce au polymorphisme, le service peut appeler <code>evenement.getCoutTotal()</code> sans connaître le type exact.
+
+<h3>4. 🧩 Abstraction</h3>
+<ul>
+<li><code>Activite</code> est une <strong>classe abstraite</strong> → on ne peut pas créer un objet <code>Activite</code> directement</li>
+<li>Elle force les sous-classes à implémenter <code>getCoutTotal()</code></li>
+<li><code>Membre</code> est aussi une classe abstraite en pratique (constructeur <code>protected</code>)</li>
+</ul>
+
+<h3>5. 🔗 Composition vs Association</h3>
+
+<table>
+<tr><th>Relation</th><th>Exemple</th><th>Type JPA</th></tr>
+</table>
+|---|---|---|
+<table>
+<tr><th>**Composition**</th><th>Club → Budget</th><th>`@OneToOne` cascade ALL (le budget n'existe pas sans club)</th></tr>
+<tr><td>**Association**</td><td>Club ↔ Membres</td><td>`@ManyToMany` (un membre peut être dans plusieurs clubs)</td></tr>
+<tr><td>**Association**</td><td>Club → Événements</td><td>`@OneToMany` (les événements appartiennent à un club)</td></tr>
+</table>
+
+<hr>
+
+<h2>🌐 API REST — Tous les Endpoints</h2>
+
+<h3>Authentification</h3>
+<table>
+<tr><th>Méthode</th><th>URL</th><th>Description</th></tr>
+</table>
+|---|---|---|
+<table>
+<tr><th>`POST`</th><th>`/api/auth/login`</th><th>Connexion (email + password)</th></tr>
+<tr><td>`POST`</td><td>`/api/auth/register`</td><td>Inscription d'un nouveau membre</td></tr>
+</table>
+
+<h3>Clubs</h3>
+<table>
+<tr><th>Méthode</th><th>URL</th><th>Description</th></tr>
+</table>
+|---|---|---|
+<table>
+<tr><th>`GET`</th><th>`/api/clubs`</th><th>Lister tous les clubs</th></tr>
+<tr><td>`POST`</td><td>`/api/clubs`</td><td>Créer un club</td></tr>
+<tr><td>`DELETE`</td><td>`/api/clubs/{id}`</td><td>Supprimer un club</td></tr>
+<tr><td>`GET`</td><td>`/api/clubs/{id}/membres`</td><td>Membres d'un club</td></tr>
+<tr><td>`POST`</td><td>`/api/clubs/{id}/membres/{membreId}`</td><td>Ajouter un membre</td></tr>
+<tr><td>`DELETE`</td><td>`/api/clubs/{id}/membres/{membreId}`</td><td>Retirer un membre</td></tr>
+<tr><td>`GET`</td><td>`/api/clubs/{id}/budget`</td><td>Solde du budget</td></tr>
+<tr><td>`PUT`</td><td>`/api/clubs/{id}/budget`</td><td>Modifier le budget</td></tr>
+</table>
+
+<h3>Événements</h3>
+<table>
+<tr><th>Méthode</th><th>URL</th><th>Description</th></tr>
+</table>
+|---|---|---|
+<table>
+<tr><th>`GET`</th><th>`/api/clubs/{id}/evenements`</th><th>Événements approuvés d'un club</th></tr>
+<tr><td>`POST`</td><td>`/api/clubs/{id}/evenements`</td><td>Créer un événement (admin/président)</td></tr>
+<tr><td>`POST`</td><td>`/api/clubs/{id}/propositions`</td><td>Proposer un événement (étudiant)</td></tr>
+<tr><td>`GET`</td><td>`/api/clubs/{id}/propositions`</td><td>Voir les propositions en attente</td></tr>
+<tr><td>`PUT`</td><td>`/api/propositions/{id}/accepter`</td><td>Accepter une proposition</td></tr>
+<tr><td>`PUT`</td><td>`/api/propositions/{id}/refuser`</td><td>Refuser une proposition</td></tr>
+</table>
+
+<hr>
+
+<h2>🗃️ Base de Données — Schéma</h2>
+
+<pre><code>
+TABLE membre
+  id, nom, prenom, email, password, role (discriminateur)
+
+TABLE club
+  id, nom, type, budget_id
+
+TABLE budget
+  id, solde
+
+TABLE activite
+  id, titre, date, duree, lieu, statut, type_evenement (discriminateur),
+  club_id, proposeur_id, cout_global, cout_equip, cout_log, cout_deco, 
+  cout_audio, explication
+
+TABLE club_membres (table de jointure ManyToMany)
+  club_id, membre_id
+</code></pre>
+
+<hr>
+
+<h2>🔄 Flux de Données — Exemple Complet</h2>
+
+<h3>Scénario : Un étudiant propose un événement</h3>
+
+<pre><code>
+1. EtudiantPanel.java
+   → ApiClient.post("/clubs/1/propositions", { titre, date, lieu, explication })
+
+2. EvenementController.java (@PostMapping)
+   → Reçoit la requête HTTP
+   → Crée un EvenementProposition avec statut = "EN_ATTENTE"
+
+3. EvenementService.java
+   → Sauvegarde via ActiviteRepository
+
+4. PostgreSQL (Supabase)
+   → INSERT INTO activite (type_evenement='proposition', statut='EN_ATTENTE', ...)
+
+5. AdminPanel ou PresidentPanel clique "Gérer propositions"
+   → GET /api/clubs/1/propositions
+
+6. Président clique "Accepter"
+   → PUT /api/propositions/5/accepter
+   → EvenementService.accepterProposition()
+   → Change statut à "APPROUVE"
+   → Déduit le coût du budget du club
+</code></pre>
+
+<hr>
+
+<h2>💡 Questions Probables du Professeur & Réponses</h2>
+
+<h3>Q1 : Pourquoi avez-vous utilisé <code>SINGLE_TABLE</code> pour l'héritage ?</h3>
+<strong>R :</strong> C'est la stratégie la plus performante car elle utilise <strong>une seule table</strong> pour toute la hiérarchie. Les requêtes n'ont pas besoin de jointures. Le discriminateur <code>role</code> (pour les membres) ou <code>type_evenement</code> (pour les activités) identifie la sous-classe.
+
+<h3>Q2 : Qu'est-ce que le polymorphisme dans votre projet ?</h3>
+<strong>R :</strong> La méthode <code>getCoutTotal()</code> est abstraite dans <code>Activite</code>. Chaque événement la calcule différemment : académique = coût global fixe, sportif = équipement + logistique, culturel = décoration + sonorisation. Le service appelle <code>evenement.getCoutTotal()</code> sans savoir quel type c'est.
+
+<h3>Q3 : Quelle est la différence entre Composition et Association ?</h3>
+<strong>R :</strong> 
+<ul>
+<li><strong>Composition</strong> (Club → Budget) : le budget n'existe pas sans le club. Si on supprime le club, le budget est supprimé automatiquement (<code>cascade = ALL, orphanRemoval = true</code>).</li>
+<li><strong>Association</strong> (Club ↔ Membre) : un membre peut exister sans club et appartenir à plusieurs clubs. C'est un <code>@ManyToMany</code>.</li>
+</ul>
+
+<h3>Q4 : Comment fonctionne l'authentification ?</h3>
+<strong>R :</strong> On envoie <code>POST /api/auth/login</code> avec email et password en JSON. Le service cherche le membre par email dans la base, appelle <code>membre.authentifier(email, mdp)</code> qui compare les champs. Si correct, on retourne les infos du membre avec son rôle. Le client Swing stocke l'objet utilisateur courant en mémoire.
+
+<h3>Q5 : Pourquoi Spring Boot et non une appli Swing pure ?</h3>
+<strong>R :</strong> Spring Boot offre un serveur REST qui permet de persister les données dans une base cloud (Supabase). L'interface Swing est ainsi déconnectée du stockage — toute la logique métier est côté serveur. C'est une architecture <strong>client-serveur</strong> moderne.
+
+<h3>Q6 : C'est quoi un Repository ?</h3>
+<strong>R :</strong> Un <code>Repository</code> (ex : <code>ClubRepository extends JpaRepository</code>) est une interface Spring Data qui génère automatiquement toutes les requêtes SQL (SELECT, INSERT, UPDATE, DELETE) sans qu'on les écrive. C'est le pattern <strong>DAO (Data Access Object)</strong> automatisé.
+
+<h3>Q7 : Pourquoi <code>@Transactional</code> sur les méthodes service ?</h3>
+<strong>R :</strong> <code>@Transactional</code> garantit que si une opération échoue en cours de route, <strong>toutes les modifications sont annulées</strong> (rollback). Par exemple, si on ajoute un événement et qu'on déduit le budget, les deux opérations doivent réussir ensemble ou échouer ensemble.
+
+<h3>Q8 : Qu'est-ce que JSON et comment il est utilisé ?</h3>
+<strong>R :</strong> JSON (JavaScript Object Notation) est un format texte pour échanger des données. Spring Boot sérialise automatiquement les objets Java en JSON (via Jackson) et les envoie via HTTP. Le client Swing les reçoit et les désérialise avec <code>ObjectMapper</code>.
+
+<h3>Q9 : La base de données est où ?</h3>
+<strong>R :</strong> La base PostgreSQL est hébergée sur <strong>Supabase</strong> (cloud). La connexion se fait via JDBC avec SSL (<code>sslmode=require</code>) sur le port 5432. Les identifiants sont dans <code>application.properties</code>. Hibernate gère la création et mise à jour des tables automatiquement (<code>ddl-auto=update</code>).
+
+<h3>Q10 : Que fait <code>DataInitializer.java</code> ?</h3>
+<strong>R :</strong> C'est un <code>CommandLineRunner</code> qui s'exécute au démarrage. Il vérifie si la base est vide, et si oui, insère des données de démonstration : 1 admin, 3 présidents, 3 clubs avec budgets, 30 étudiants, et quelques événements initiaux.
+
+<hr>
+
+<h2>📂 Structure des Fichiers</h2>
+
+<pre><code>
+Club/
+├── src/main/java/com/ihec/club/
+│   ├── ClubApplication.java        ← Point d'entrée (Spring + Swing)
+│   ├── DataInitializer.java        ← Données de démonstration
+│   ├── model/
+│   │   ├── Membre.java             ← Classe mère (héritage SINGLE_TABLE)
+│   │   ├── Admin.java
+│   │   ├── President.java
+│   │   ├── Etudiant.java
+│   │   ├── Club.java               ← Entité centrale
+│   │   ├── Budget.java             ← Composition dans Club
+│   │   ├── Activite.java           ← Classe abstraite (polymorphisme)
+│   │   ├── EvenementAcademique.java
+│   │   ├── EvenementSportif.java
+│   │   ├── EvenementCulturel.java
+│   │   └── EvenementProposition.java
+│   ├── repository/
+│   │   ├── MembreRepository.java
+│   │   ├── ClubRepository.java
+│   │   ├── ActiviteRepository.java
+│   │   └── BudgetRepository.java
+│   ├── service/
+│   │   ├── ClubService.java
+│   │   ├── MembreService.java
+│   │   └── EvenementService.java
+│   ├── controller/
+│   │   ├── ClubController.java
+│   │   ├── MembreController.java
+│   │   ├── EvenementController.java
+│   │   └── BudgetController.java
+│   └── gui/
+│       ├── MainGUI.java            ← Fenêtre principale + login
+│       ├── AdminPanel.java         ← Interface administrateur
+│       ├── PresidentPanel.java     ← Interface président
+│       ├── EtudiantPanel.java      ← Interface étudiant
+│       ├── ApiClient.java          ← Client HTTP REST
+│       └── ExportUtils.java        ← Export CSV
+├── src/main/resources/
+│   └── application.properties      ← Config DB + port
+├── pom.xml                         ← Dépendances Maven
+├── schema.sql                      ← Schéma SQL de référence
+└── run.bat                         ← Script de lancement
+</code></pre>
+
+<hr>
+
+<h2>🎬 Script de Démonstration (à suivre pendant la soutenance)</h2>
+
+<h3>Étape 1 — Lancement</h3>
+<ul>
+<li>Double-cliquer sur <code>run.bat</code></li>
+<li>Attendre le message <em>"Started ClubApplication"</em> dans la console</li>
+<li>La fenêtre Swing s'ouvre automatiquement</li>
+</ul>
+
+<blockquote>💬 <strong>Dire au prof :</strong> <em>"L'application démarre deux choses en même temps : le serveur Spring Boot sur le port 8081, puis l'interface graphique Swing. Les deux tournent dans le même processus Java."</em></blockquote>
+
+<hr>
+
+<h3>Étape 2 — Connexion Admin</h3>
+<ul>
+<li>Email : <code>admin@ihec.ucar.tn</code> | Password : <code>admin123</code></li>
+<li>Cliquer <strong>Se connecter</strong></li>
+</ul>
+
+<blockquote>💬 <strong>Dire au prof :</strong> <em>"L'interface envoie une requête HTTP POST à /api/auth/login. Le serveur trouve le membre par email, vérifie le mot de passe, et retourne son rôle en JSON. Selon le rôle reçu, l'interface affiche le bon panneau."</em></blockquote>
+
+<strong>Montrer :</strong>
+<ul>
+<li>Les <strong>3 cartes statistiques</strong> en haut (Total Clubs, Total Membres, Budget Global)</li>
+<li>La barre de <strong>recherche</strong> dans les tableaux (taper "enactus" par exemple)</li>
+<li>Cliquer <strong>Ajouter un club</strong> → créer un nouveau club</li>
+<li>Onglet "Gérer un Club" → sélectionner un club → voir ses membres et événements</li>
+<li>Cliquer <strong>Exporter CSV</strong> → sauvegarder la liste des membres</li>
+</ul>
+
+<hr>
+
+<h3>Étape 3 — Connexion Président</h3>
+<ul>
+<li>Se déconnecter → Email : <code>ali@ihec.ucar.tn</code> | Password : <code>ali123</code></li>
+</ul>
+
+<blockquote>💬 <strong>Dire au prof :</strong> <em>"Ali est le président du club Enactus. Son espace est limité à son propre club uniquement."</em></blockquote>
+
+<strong>Montrer :</strong>
+<ul>
+<li>Les <strong>2 cartes</strong> : Total Événements + Budget Restant</li>
+<li>Ajouter un événement (ex: titre "Hackathon", date 20/06/2026, type académique, coût 300)</li>
+<li>Aller dans <strong>Planning</strong> → cliquer "Afficher planning" → liste textuelle de tous les événements</li>
+<li>Aller dans <strong>Budget</strong> → voir le solde diminuer après l'ajout</li>
+</ul>
+
+<hr>
+
+<h3>Étape 4 — Connexion Étudiant</h3>
+<ul>
+<li>Se déconnecter → Email : <code>enactus1@ihec.ucar.tn</code> | Password : <code>pass1</code></li>
+</ul>
+
+<blockquote>💬 <strong>Dire au prof :</strong> <em>"L'étudiant n'a que deux fonctions : consulter les événements approuvés et proposer ses propres idées."</em></blockquote>
+
+<strong>Montrer :</strong>
+<ul>
+<li>La liste des événements avec la barre de recherche</li>
+<li>Onglet <strong>Proposer un Événement</strong> → remplir le formulaire</li>
+</ul>
+
+<hr>
+
+<h3>Étape 5 — Valider la proposition (optionnel)</h3>
+<ul>
+<li>Se reconnecter en tant que <code>ali@ihec.ucar.tn</code></li>
+<li>Aller dans Événements → cliquer <strong>Gérer propositions</strong></li>
+<li>Accepter la proposition → elle apparaît dans la liste des événements approuvés</li>
+</ul>
+
+<blockquote>💬 <strong>Dire au prof :</strong> <em>"Quand le président accepte une proposition, le service EvenementService change le statut à APPROUVE et déduit automatiquement le coût du budget du club via la méthode getCoutTotal() — c'est le polymorphisme en action."</em></blockquote>
+
+<hr>
+
+<h2>❓ Questions Avancées & Réponses</h2>
+
+<h3>Q11 : Pourquoi ne pas utiliser Spring Security pour l'authentification ?</h3>
+<strong>R :</strong> Pour un projet académique, Spring Security ajoute une complexité importante (tokens JWT, filtres HTTP). On a implémenté une authentification <strong>manuelle simple</strong> côté service : <code>membre.authentifier(email, mdp)</code>. La méthode <code>authentifier</code> est un bon exemple d'<strong>encapsulation</strong> car elle compare les champs privés directement.
+
+<h3>Q12 : Qu'est-ce que JPA et Hibernate ?</h3>
+<strong>R :</strong> JPA (Jakarta Persistence API) est une <strong>spécification</strong> Java pour mapper des objets à des tables de base de données. Hibernate est l'<strong>implémentation</strong> concrète utilisée par Spring Boot. Les annotations <code>@Entity</code>, <code>@Table</code>, <code>@OneToMany</code>, etc. viennent de JPA. Hibernate génère et exécute le SQL automatiquement.
+
+<h3>Q13 : Que se passe-t-il si deux utilisateurs se connectent en même temps ?</h3>
+<strong>R :</strong> Spring Boot gère le <strong>multi-thread</strong> automatiquement. Chaque requête HTTP est traitée dans un thread séparé. L'annotation <code>@Transactional</code> garantit l'<strong>isolation</strong> des transactions grâce à PostgreSQL.
+
+<h3>Q14 : Pourquoi <code>@JsonIgnore</code> sur le mot de passe ?</h3>
+<strong>R :</strong> Pour des raisons de <strong>sécurité</strong>. Sans <code>@JsonIgnore</code>, Jackson inclurait le mot de passe dans toutes les réponses JSON. Avec cette annotation, le champ <code>password</code> est exclu de la sérialisation JSON, donc jamais envoyé au client.
+
+<h3>Q15 : Qu'est-ce que <code>cascade = CascadeType.ALL</code> sur Budget ?</h3>
+<strong>R :</strong> Cela signifie que toutes les opérations JPA (persist, merge, remove, refresh) sur le <code>Club</code> sont <strong>propagées automatiquement</strong> au <code>Budget</code>. Donc quand on sauvegarde un club, son budget est aussi sauvegardé. Quand on supprime un club, son budget est aussi supprimé. C'est la <strong>composition</strong> en pratique.
+
+<h3>Q16 : Qu'est-ce qu'un <code>@ManyToMany</code> et comment est-il stocké ?</h3>
+<strong>R :</strong> La relation <code>@ManyToMany</code> entre <code>Club</code> et <code>Membre</code> crée une <strong>table de jointure</strong> <code>club_membres</code> avec deux colonnes : <code>club_id</code> et <code>membre_id</code>. Un membre peut appartenir à plusieurs clubs et un club peut avoir plusieurs membres.
+
+<h3>Q17 : Comment le discriminateur fonctionne avec <code>SINGLE_TABLE</code> ?</h3>
+<strong>R :</strong> Hibernate ajoute une colonne <code>role</code> (pour Membre) ou <code>type_evenement</code> (pour Activite) dans la table. À la lecture, il regarde cette colonne pour instancier la bonne sous-classe Java (<code>Admin</code>, <code>President</code>, <code>EvenementSportif</code>, etc.). C'est le <strong>pattern discriminateur</strong>.
+
+<h3>Q18 : Quelle est la différence entre <code>@OneToMany</code> et <code>@ManyToOne</code> ?</h3>
+<strong>R :</strong> Ce sont les deux côtés de la même relation :
+<ul>
+<li><code>Club</code> a <code>@OneToMany</code> vers <code>Activite</code> (un club → plusieurs événements)</li>
+<li><code>Activite</code> a <code>@ManyToOne</code> vers <code>Club</code> (plusieurs événements → un club, via <code>club_id</code>)</li>
+La colonne <code>club_id</code> existe dans la table <code>activite</code>, c'est le côté <code>@ManyToOne</code> qui possède la clé étrangère.
+</ul>
+
+<h3>Q19 : Pourquoi avoir créé <code>ExportUtils</code> comme classe séparée ?</h3>
+<strong>R :</strong> C'est le principe de <strong>Séparation des Responsabilités</strong> (Single Responsibility Principle). La logique d'export n'appartient pas à l'interface (AdminPanel), donc elle est extraite dans une classe utilitaire réutilisable par tous les panneaux.
+
+<h3>Q20 : Que se passe-t-il si Supabase est inaccessible ?</h3>
+<strong>R :</strong> L'application affiche une erreur de connexion au démarrage. Spring Boot ne peut pas démarrer sans connexion à la base. Dans un contexte de production, on ajouterait un mécanisme de reconnexion ou une base locale de secours (ex: H2 in-memory).
+
+</body>
+</html>

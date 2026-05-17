@@ -37,41 +37,52 @@ public class MainGUI extends JFrame {
 
     private JPanel creerPanneauConnexion() {
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBackground(new Color(240, 248, 255));
+        // Wrapper for a "Card" look
+        JPanel cardPanel = new JPanel(new GridBagLayout());
+        cardPanel.setBackground(UIManager.getColor("Panel.background"));
+        cardPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(200, 200, 200), 1, true),
+                BorderFactory.createEmptyBorder(30, 40, 30, 40)));
+
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
 
         // Titre
-        JLabel titre = new JLabel("SYSTÈME DE GESTION DES CLUBS DE L'IHEC");
-        titre.setFont(new Font("Arial", Font.BOLD, 20));
-        titre.setForeground(new Color(25, 25, 112));
+        JLabel titre = new JLabel("SYSTÈME DE GESTION DES CLUBS");
+        titre.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        titre.setForeground(new Color(41, 128, 185));
         gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.CENTER;
-        panel.add(titre, gbc);
+        cardPanel.add(titre, gbc);
 
-        JLabel sousTitre = new JLabel("Gestion des Événements — Spring Boot + PostgreSQL");
-        sousTitre.setFont(new Font("Arial", Font.ITALIC, 14));
+        JLabel sousTitre = new JLabel("IHEC Carthage");
+        sousTitre.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        sousTitre.setForeground(Color.GRAY);
         gbc.gridy = 1;
-        panel.add(sousTitre, gbc);
+        cardPanel.add(sousTitre, gbc);
 
         // Email
         gbc.gridwidth = 1; gbc.anchor = GridBagConstraints.EAST;
         gbc.gridy = 2; gbc.gridx = 0;
-        panel.add(new JLabel("Email:"), gbc);
+        cardPanel.add(new JLabel("Email:"), gbc);
         JTextField emailField = new JTextField(20);
         gbc.gridx = 1; gbc.anchor = GridBagConstraints.WEST;
-        panel.add(emailField, gbc);
+        cardPanel.add(emailField, gbc);
 
         // Mot de passe
         gbc.gridy = 3; gbc.gridx = 0; gbc.anchor = GridBagConstraints.EAST;
-        panel.add(new JLabel("Mot de passe:"), gbc);
+        cardPanel.add(new JLabel("Mot de passe:"), gbc);
         JPasswordField passwordField = new JPasswordField(20);
         gbc.gridx = 1; gbc.anchor = GridBagConstraints.WEST;
-        panel.add(passwordField, gbc);
+        cardPanel.add(passwordField, gbc);
 
         // Boutons
-        JPanel buttonPanel = new JPanel(new FlowLayout());
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
         JButton loginBtn = new JButton("Se connecter");
+        loginBtn.setBackground(new Color(41, 128, 185));
+        loginBtn.setForeground(Color.WHITE);
+        loginBtn.setFocusPainted(false);
+        
         JButton registerBtn = new JButton("S'inscrire");
         JButton viewClubsBtn = new JButton("Afficher les clubs");
 
@@ -90,8 +101,9 @@ public class MainGUI extends JFrame {
 
         gbc.gridy = 4; gbc.gridx = 0; gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.CENTER;
-        panel.add(buttonPanel, gbc);
+        cardPanel.add(buttonPanel, gbc);
 
+        panel.add(cardPanel);
         return panel;
     }
 

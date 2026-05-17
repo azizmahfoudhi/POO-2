@@ -5,6 +5,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
+import javax.swing.table.TableRowSorter;
 
 /**
  * Panneau étudiant — consulte les événements et propose des activités.
@@ -23,11 +24,15 @@ public class EtudiantPanel extends JPanel {
 
         // En-tête
         JPanel headerPanel = new JPanel(new BorderLayout());
-        JLabel titre = new JLabel("MENU ETUDIANT : " + etudiant.get("nom") + " " + etudiant.get("prenom"));
-        titre.setFont(new Font("Arial", Font.BOLD, 18));
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+        headerPanel.setBackground(new Color(41, 128, 185));
+        JLabel titre = new JLabel("Bienvenue, " + etudiant.get("prenom") + " " + etudiant.get("nom") + "  🎓");
+        titre.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        titre.setForeground(Color.WHITE);
         headerPanel.add(titre, BorderLayout.WEST);
 
         JButton deconnecterBtn = new JButton("Se déconnecter");
+        deconnecterBtn.setFocusPainted(false);
         deconnecterBtn.addActionListener(e -> mainGUI.deconnecter());
         headerPanel.add(deconnecterBtn, BorderLayout.EAST);
         add(headerPanel, BorderLayout.NORTH);
@@ -39,7 +44,8 @@ public class EtudiantPanel extends JPanel {
     }
 
     private JPanel creerPanneauEvenements() {
-        JPanel panel = new JPanel(new BorderLayout());
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         // Sans les coûts pour les étudiants
         String[] colonnes = {"Club", "Titre", "Date", "Durée", "Lieu", "Type"};
@@ -47,16 +53,44 @@ public class EtudiantPanel extends JPanel {
             public boolean isCellEditable(int r, int c) { return false; }
         };
         JTable table = new JTable(evenementsModel);
-        actualiserEvenements();
+        table.setRowHeight(25);
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
+        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(evenementsModel);
+        table.setRowSorter(sorter);
 
-        JPanel buttonPanel = new JPanel(new FlowLayout());
+        // Search bar
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        searchPanel.add(new JLabel("Rechercher un événement : "));
+        JTextField searchField = new JTextField(22);
+        searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { filter(searchField.getText(), sorter); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { filter(searchField.getText(), sorter); }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { filter(searchField.getText(), sorter); }
+        });
+        searchPanel.add(searchField);
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton actualiserBtn = new JButton("Actualiser");
         actualiserBtn.addActionListener(e -> actualiserEvenements());
         buttonPanel.add(actualiserBtn);
 
+        JPanel southPanel = new JPanel(new BorderLayout());
+        southPanel.add(buttonPanel, BorderLayout.EAST);
+
+        actualiserEvenements();
+
+        panel.add(searchPanel, BorderLayout.NORTH);
         panel.add(new JScrollPane(table), BorderLayout.CENTER);
-        panel.add(buttonPanel, BorderLayout.SOUTH);
+        panel.add(southPanel, BorderLayout.SOUTH);
         return panel;
+    }
+
+    private void filter(String str, TableRowSorter<DefaultTableModel> sorter) {
+        if (str.trim().isEmpty()) {
+            sorter.setRowFilter(null);
+        } else {
+            sorter.setRowFilter(RowFilter.regexFilter("(?i)" + str));
+        }
     }
 
     private JPanel creerPanneauProposer() {

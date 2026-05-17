@@ -5,6 +5,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
+import javax.swing.table.TableRowSorter;
 
 /**
  * Panneau du président — gère les événements et le budget de son club.
@@ -19,6 +20,10 @@ public class PresidentPanel extends JPanel {
     private Long clubId = null;
     private String clubNom = "";
 
+    // Dashboard labels
+    private JLabel statEvtsLabel = new JLabel("0");
+    private JLabel statBudgetLabel = new JLabel("0 DT");
+
     public PresidentPanel(Map<String, Object> president, MainGUI mainGUI) {
         this.president = president;
         this.mainGUI = mainGUI;
@@ -29,19 +34,24 @@ public class PresidentPanel extends JPanel {
 
         // En-tête
         JPanel headerPanel = new JPanel(new BorderLayout());
-        JLabel titre = new JLabel("MENU PRESIDENT : " + president.get("nom") + " — Club: " + clubNom);
-        titre.setFont(new Font("Arial", Font.BOLD, 18));
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+        headerPanel.setBackground(new Color(39, 174, 96));
+        JLabel titre = new JLabel("📌  PRÉSIDENT : " + president.get("nom") + " " + president.get("prenom") + "   |   Club: " + clubNom);
+        titre.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        titre.setForeground(Color.WHITE);
         headerPanel.add(titre, BorderLayout.WEST);
 
         JButton deconnecterBtn = new JButton("Se déconnecter");
+        deconnecterBtn.setFocusPainted(false);
         deconnecterBtn.addActionListener(e -> mainGUI.deconnecter());
         headerPanel.add(deconnecterBtn, BorderLayout.EAST);
         add(headerPanel, BorderLayout.NORTH);
 
         JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.addTab("Événements", creerPanneauEvenements());
-        tabbedPane.addTab("Planning", creerPanneauPlanning());
-        tabbedPane.addTab("Budget", creerPanneauBudget());
+        tabbedPane.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        tabbedPane.addTab("📅 Événements", creerPanneauEvenements());
+        tabbedPane.addTab("📆 Planning", creerPanneauPlanning());
+        tabbedPane.addTab("💰 Budget", creerPanneauBudget());
         add(tabbedPane, BorderLayout.CENTER);
     }
 
@@ -69,29 +79,90 @@ public class PresidentPanel extends JPanel {
     }
 
     private JPanel creerPanneauEvenements() {
-        JPanel panel = new JPanel(new BorderLayout());
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        // --- Dashboard Stats ---
+        JPanel statsPanel = new JPanel(new GridLayout(1, 2, 10, 10));
+        statsPanel.add(creerCarteStatistique("Total Événements", statEvtsLabel));
+        statsPanel.add(creerCarteStatistique("Budget Restant", statBudgetLabel));
+
+        // --- Tableau ---
         String[] colonnes = {"Titre", "Date", "Durée", "Lieu", "Type", "Coût"};
         evenementsModel = new DefaultTableModel(colonnes, 0) {
             public boolean isCellEditable(int r, int c) { return false; }
         };
         JTable table = new JTable(evenementsModel);
-        actualiserEvenements();
+        table.setRowHeight(25);
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
+        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(evenementsModel);
+        table.setRowSorter(sorter);
+        JScrollPane scrollPane = new JScrollPane(table);
 
-        JPanel buttonPanel = new JPanel(new FlowLayout());
+        // --- Search and Actions ---
+        JPanel topActionPanel = new JPanel(new BorderLayout());
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        searchPanel.add(new JLabel("Rechercher : "));
+        JTextField searchField = new JTextField(20);
+        searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { search(searchField.getText(), sorter); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { search(searchField.getText(), sorter); }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { search(searchField.getText(), sorter); }
+        });
+        searchPanel.add(searchField);
+        topActionPanel.add(statsPanel, BorderLayout.NORTH);
+        topActionPanel.add(searchPanel, BorderLayout.SOUTH);
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton ajouterBtn = new JButton("Ajouter un événement");
         JButton gererPropsBtn = new JButton("Gérer propositions");
+        JButton exportBtn = new JButton("Exporter CSV");
         JButton actualiserBtn = new JButton("Actualiser");
 
         ajouterBtn.addActionListener(e -> ouvrirDialogAjouterEvenement());
         gererPropsBtn.addActionListener(e -> gererPropositions());
-        actualiserBtn.addActionListener(e -> actualiserEvenements());
+        exportBtn.addActionListener(e -> ExportUtils.exportTableToCSV(table, this));
+        actualiserBtn.addActionListener(e -> { actualiserEvenements(); actualiserSolde(); });
 
         buttonPanel.add(ajouterBtn);
         buttonPanel.add(gererPropsBtn);
+        buttonPanel.add(exportBtn);
         buttonPanel.add(actualiserBtn);
-        panel.add(new JScrollPane(table), BorderLayout.CENTER);
+
+        panel.add(topActionPanel, BorderLayout.NORTH);
+        panel.add(scrollPane, BorderLayout.CENTER);
         panel.add(buttonPanel, BorderLayout.SOUTH);
+        
+        // Initial load
+        actualiserEvenements();
+        actualiserSolde();
+        
         return panel;
+    }
+
+    private JPanel creerCarteStatistique(String titre, JLabel valeurLabel) {
+        JPanel carte = new JPanel(new BorderLayout());
+        carte.setBackground(new Color(245, 245, 250));
+        carte.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(220, 220, 220), 1, true),
+            BorderFactory.createEmptyBorder(15, 15, 15, 15)
+        ));
+        JLabel tLabel = new JLabel(titre);
+        tLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        tLabel.setForeground(Color.GRAY);
+        valeurLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        valeurLabel.setForeground(new Color(41, 128, 185));
+        carte.add(tLabel, BorderLayout.NORTH);
+        carte.add(valeurLabel, BorderLayout.CENTER);
+        return carte;
+    }
+
+    private void search(String str, TableRowSorter<DefaultTableModel> sorter) {
+        if (str.trim().length() == 0) {
+            sorter.setRowFilter(null);
+        } else {
+            sorter.setRowFilter(RowFilter.regexFilter("(?i)" + str));
+        }
     }
 
     private JPanel creerPanneauPlanning() {
@@ -181,6 +252,7 @@ public class PresidentPanel extends JPanel {
         try {
             String json = ApiClient.get("/clubs/" + clubId + "/evenements");
             List<Map<String, Object>> evts = ApiClient.parseList(json);
+            int totalEvts = evts.size();
             for (Map<String, Object> e : evts) {
                 evenementsModel.addRow(new Object[]{
                     e.get("titre"), e.get("date"), e.get("duree") + "h",
@@ -188,6 +260,7 @@ public class PresidentPanel extends JPanel {
                     String.format("%.2f DT", ((Number) e.get("coutTotal")).doubleValue())
                 });
             }
+            statEvtsLabel.setText(String.valueOf(totalEvts));
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Erreur: " + ex.getMessage());
         }
@@ -199,8 +272,10 @@ public class PresidentPanel extends JPanel {
             String json = ApiClient.get("/clubs/" + clubId + "/budget");
             Map<String, Object> budget = ApiClient.parseMap(json);
             soldeLabel.setText(String.format("%.2f DT", ((Number) budget.get("solde")).doubleValue()));
+            statBudgetLabel.setText(soldeLabel.getText());
         } catch (Exception ex) {
             soldeLabel.setText("Erreur");
+            statBudgetLabel.setText("Erreur");
         }
     }
 
