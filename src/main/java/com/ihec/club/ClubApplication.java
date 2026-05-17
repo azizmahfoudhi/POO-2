@@ -3,6 +3,7 @@ package com.ihec.club;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import org.springframework.boot.builder.SpringApplicationBuilder;
 import javax.swing.*;
 
 /**
@@ -13,8 +14,10 @@ import javax.swing.*;
 public class ClubApplication {
 
     public static void main(String[] args) {
-        // 1. Démarrer le serveur Spring Boot (API REST sur le port 8080)
-        SpringApplication.run(ClubApplication.class, args);
+        // 1. Démarrer le serveur Spring Boot avec le mode headless désactivé (obligatoire pour Swing)
+        new SpringApplicationBuilder(ClubApplication.class)
+            .headless(false)
+            .run(args);
 
         // 2. Lancer l'interface graphique Swing
         SwingUtilities.invokeLater(() -> {
